@@ -55,6 +55,10 @@
     
     [self setupDisplayLayer];
     
+    CMTimebaseRef timeBaseControl = _displayLayer.controlTimebase;
+    
+    bool startFlag = false;
+    
     __weak typeof(self) weakSelf = self;
     _decoder.decodeCallback = ^(CVImageBufferRef  _Nonnull imageBuffer,
                                 CMTime presentationTimeStamp,
@@ -71,8 +75,15 @@
         
         CMSampleBufferRef sampleBuffer = NULL;
         OSStatus status = CMSampleBufferCreateForImageBuffer(NULL, imageBuffer, true, NULL, NULL, videoDesc, &timeInfo, &sampleBuffer);
-        
+        NSLog(@"%d, %d")
         if (sampleBuffer != NULL) {
+            
+            if (!startFlag) {
+                CMTimebaseSetRate(timeBaseControl, 1); // 1 倍速
+            }
+            
+//            CMTimebaseSetTime(timeBaseControl, presentationTimeStamp);
+            
             __strong typeof(self) strongSelf = weakSelf;
             if ([strongSelf->_displayLayer isReadyForMoreMediaData]) {
                 [strongSelf->_displayLayer enqueueSampleBuffer: sampleBuffer];
@@ -85,23 +96,19 @@
     };
     
     [_displayLayer requestMediaDataWhenReadyOnQueue: _displayQueue usingBlock:^{
+        CMSampleBufferRef sampleBuffer = [self->_videoOutput copyNextSampleBuffer];
         
-    }];
-    
-    while (1) {
-        
-        CMSampleBufferRef sampleBuffer = [_videoOutput copyNextSampleBuffer];
-        
-        [_decoder decode: sampleBuffer];
+        [self->_decoder decode: sampleBuffer];
         
         CMSampleBufferInvalidate(sampleBuffer);
         
-        if (sampleBuffer == nil) {
-            break;
+        if (sampleBuffer != nil) {
+            CFRelease(sampleBuffer);
+        } else {
+            [self->_displayLayer stopRequestingMediaData];
         }
         
-        CFRelease(sampleBuffer);
-    }
+    }];
 }
 
 #pragma mark - Load asset
@@ -155,6 +162,13 @@
     _displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
     _displayLayer.opaque = true;
     [self.view.layer addSublayer: _displayLayer];
+    
+    //set Timebase
+    CMTimebaseRef controlTimebase;
+    CMTimebaseCreateWithMasterClock( CFAllocatorGetDefault(), CMClockGetHostTimeClock(), &controlTimebase );
+    _displayLayer.controlTimebase = controlTimebase;
+    CMTimebaseSetRate(controlTimebase, 0); // 先不播放
+    CMTimebaseSetTime(controlTimebase, kCMTimeZero);
 }
 
 @end
