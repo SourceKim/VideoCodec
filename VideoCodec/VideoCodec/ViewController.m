@@ -31,6 +31,7 @@ NSString * const kCellId = @"cellId";
     
     _demoArray = @ [
                     @{@"1. 将 MP4 格式文件编码成 H264 文件": @"EncodeMp4ToH264ViewController"},
+                    @{@"2. 将 H264 文件解码": @"DecodeH264FileViewController"},
                     ];
 }
 

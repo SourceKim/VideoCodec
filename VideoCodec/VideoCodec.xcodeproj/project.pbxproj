@@ -12,8 +12,11 @@
 		3B14DB772499EF6600D58210 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3B14DB762499EF6600D58210 /* Assets.xcassets */; };
 		3B14DB7A2499EF6600D58210 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3B14DB782499EF6600D58210 /* LaunchScreen.storyboard */; };
 		3B14DB7D2499EF6600D58210 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B14DB7C2499EF6600D58210 /* main.m */; };
+		3B7AA49F249BDF1B00C67D42 /* SKVideoFileReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7AA49E249BDF1B00C67D42 /* SKVideoFileReader.m */; };
+		3B7AA4A3249BDF2D00C67D42 /* SKPacket.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7AA4A2249BDF2D00C67D42 /* SKPacket.m */; };
+		3B7AA4A7249BE4B800C67D42 /* DecodeH264FileViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7AA4A6249BE4B800C67D42 /* DecodeH264FileViewController.m */; };
+		3B7AA4AA249BF11B00C67D42 /* SKVideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7AA4A9249BF11B00C67D42 /* SKVideoDecoder.m */; };
 		3BFE51DD249A1513005D71E8 /* 1561122035537077.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 3BFE51DC249A1513005D71E8 /* 1561122035537077.mp4 */; };
-		3BFE51E6249A1B40005D71E8 /* SKVideoCodec.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BFE51E5249A1B40005D71E8 /* SKVideoCodec.m */; };
 		3BFE51EA249B40DF005D71E8 /* SKVideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BFE51E9249B40DF005D71E8 /* SKVideoEncoder.m */; };
 		3BFE51F1249B692B005D71E8 /* EncodeMp4ToH264ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BFE51F0249B692B005D71E8 /* EncodeMp4ToH264ViewController.m */; };
 /* End PBXBuildFile section */
@@ -28,9 +31,15 @@
 		3B14DB792499EF6600D58210 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3B14DB7B2499EF6600D58210 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3B14DB7C2499EF6600D58210 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		3B7AA49D249BDF1B00C67D42 /* SKVideoFileReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SKVideoFileReader.h; sourceTree = "<group>"; };
+		3B7AA49E249BDF1B00C67D42 /* SKVideoFileReader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SKVideoFileReader.m; sourceTree = "<group>"; };
+		3B7AA4A1249BDF2D00C67D42 /* SKPacket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SKPacket.h; sourceTree = "<group>"; };
+		3B7AA4A2249BDF2D00C67D42 /* SKPacket.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SKPacket.m; sourceTree = "<group>"; };
+		3B7AA4A5249BE4B800C67D42 /* DecodeH264FileViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DecodeH264FileViewController.h; sourceTree = "<group>"; };
+		3B7AA4A6249BE4B800C67D42 /* DecodeH264FileViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DecodeH264FileViewController.m; sourceTree = "<group>"; };
+		3B7AA4A8249BF11B00C67D42 /* SKVideoDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SKVideoDecoder.h; sourceTree = "<group>"; };
+		3B7AA4A9249BF11B00C67D42 /* SKVideoDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SKVideoDecoder.m; sourceTree = "<group>"; };
 		3BFE51DC249A1513005D71E8 /* 1561122035537077.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1561122035537077.mp4; sourceTree = "<group>"; };
-		3BFE51E4249A1B40005D71E8 /* SKVideoCodec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SKVideoCodec.h; sourceTree = "<group>"; };
-		3BFE51E5249A1B40005D71E8 /* SKVideoCodec.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SKVideoCodec.m; sourceTree = "<group>"; };
 		3BFE51E8249B40DF005D71E8 /* SKVideoEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SKVideoEncoder.h; sourceTree = "<group>"; };
 		3BFE51E9249B40DF005D71E8 /* SKVideoEncoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SKVideoEncoder.m; sourceTree = "<group>"; };
 		3BFE51EF249B692B005D71E8 /* EncodeMp4ToH264ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EncodeMp4ToH264ViewController.h; sourceTree = "<group>"; };
@@ -82,6 +91,26 @@
 			path = VideoCodec;
 			sourceTree = "<group>";
 		};
+		3B7AA4A0249BDF2000C67D42 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				3B7AA49D249BDF1B00C67D42 /* SKVideoFileReader.h */,
+				3B7AA49E249BDF1B00C67D42 /* SKVideoFileReader.m */,
+				3B7AA4A1249BDF2D00C67D42 /* SKPacket.h */,
+				3B7AA4A2249BDF2D00C67D42 /* SKPacket.m */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		3B7AA4A4249BE49900C67D42 /* Decode_H264_File */ = {
+			isa = PBXGroup;
+			children = (
+				3B7AA4A5249BE4B800C67D42 /* DecodeH264FileViewController.h */,
+				3B7AA4A6249BE4B800C67D42 /* DecodeH264FileViewController.m */,
+			);
+			path = Decode_H264_File;
+			sourceTree = "<group>";
+		};
 		3BFE51DB249A14ED005D71E8 /* Resource */ = {
 			isa = PBXGroup;
 			children = (
@@ -93,6 +122,7 @@
 		3BFE51DE249A1531005D71E8 /* Test */ = {
 			isa = PBXGroup;
 			children = (
+				3B7AA4A4249BE49900C67D42 /* Decode_H264_File */,
 				3BFE51EB249B685C005D71E8 /* Encode_MP4_H264 */,
 			);
 			path = Test;
@@ -101,10 +131,11 @@
 		3BFE51E7249A1B47005D71E8 /* VideoCodec */ = {
 			isa = PBXGroup;
 			children = (
-				3BFE51E4249A1B40005D71E8 /* SKVideoCodec.h */,
-				3BFE51E5249A1B40005D71E8 /* SKVideoCodec.m */,
+				3B7AA4A0249BDF2000C67D42 /* Utils */,
 				3BFE51E8249B40DF005D71E8 /* SKVideoEncoder.h */,
 				3BFE51E9249B40DF005D71E8 /* SKVideoEncoder.m */,
+				3B7AA4A8249BF11B00C67D42 /* SKVideoDecoder.h */,
+				3B7AA4A9249BF11B00C67D42 /* SKVideoDecoder.m */,
 			);
 			path = VideoCodec;
 			sourceTree = "<group>";
@@ -188,12 +219,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B7AA4AA249BF11B00C67D42 /* SKVideoDecoder.m in Sources */,
 				3BFE51EA249B40DF005D71E8 /* SKVideoEncoder.m in Sources */,
 				3BFE51F1249B692B005D71E8 /* EncodeMp4ToH264ViewController.m in Sources */,
+				3B7AA49F249BDF1B00C67D42 /* SKVideoFileReader.m in Sources */,
+				3B7AA4A3249BDF2D00C67D42 /* SKPacket.m in Sources */,
 				3B14DB722499EF6300D58210 /* ViewController.m in Sources */,
 				3B14DB7D2499EF6600D58210 /* main.m in Sources */,
 				3B14DB6F2499EF6300D58210 /* AppDelegate.m in Sources */,
-				3BFE51E6249A1B40005D71E8 /* SKVideoCodec.m in Sources */,
+				3B7AA4A7249BE4B800C67D42 /* DecodeH264FileViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
