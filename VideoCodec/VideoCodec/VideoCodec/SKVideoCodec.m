@@ -12,6 +12,8 @@
 @implementation SKVideoCodec {
     
     VTDecompressionSessionRef _decodeSession;
+    
+    CMFormatDescriptionRef _currentDesc;
 }
 
 static SKVideoCodec *ptr = nil;
@@ -50,6 +52,7 @@ void decodeCallback(
 - (void)createDecodeSession: (AVAssetTrack *)track {
     
     CMFormatDescriptionRef formatDesc = (__bridge CMFormatDescriptionRef)[track.formatDescriptions firstObject];
+    _currentDesc = formatDesc;
     
     VTDecompressionOutputCallbackRecord callback = {
         .decompressionOutputCallback = decodeCallback, // 传入解码回调到函数指针
@@ -78,6 +81,12 @@ void decodeCallback(
                                                     !kVTDecodeFrame_EnableAsynchronousDecompression,
                                                     NULL,
                                                     NULL);
+    
+    CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(sampleBuffer);
+    CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(desc);
+    NSLog(@"decode dim：%d, %d", dim.width, dim.height);
+    
+    NSLog(@"same desc：%d", CMFormatDescriptionEqual(_currentDesc, desc));
     
     NSLog(@"DecodeType: %d", type);
 }

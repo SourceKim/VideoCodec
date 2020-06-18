@@ -30,7 +30,7 @@ NSString * const kCellId = @"cellId";
     [_table registerClass: [UITableViewCell class] forCellReuseIdentifier: kCellId];
     
     _demoArray = @ [
-                    @{@"1. 解码 MP4 格式": @"DecodeMp4ViewController"},
+                    @{@"1. 将 MP4 格式文件编码成 H264 文件": @"EncodeMp4ToH264ViewController"},
                     ];
 }
 
