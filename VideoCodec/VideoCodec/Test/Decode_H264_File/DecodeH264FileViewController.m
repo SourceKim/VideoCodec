@@ -23,6 +23,10 @@
     SKVideoDecoder *_decoder;
     
     UIImageView *_imgv;
+    
+    NSMutableArray<UIImage *> *_imgs;
+    
+    CADisplayLink *_dis;
 }
 
 - (void)viewDidLoad {
@@ -40,6 +44,7 @@
     
     _decoder = [SKVideoDecoder new];
     
+    _imgs = [NSMutableArray array];
     _decoder.decodeCallback = ^(CVPixelBufferRef buffer) {
         CVPixelBufferRef decodedBuffer = buffer;
         if (decodedBuffer) {
@@ -47,9 +52,10 @@
             CIContext *temporaryContext = [CIContext contextWithOptions:nil];
             CGImageRef videoImage = [temporaryContext createCGImage:ciImage fromRect:CGRectMake(0, 0, CVPixelBufferGetWidth(decodedBuffer), CVPixelBufferGetHeight(decodedBuffer))];
             UIImage *img = [UIImage imageWithCGImage: videoImage];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _imgv.image = img;
-            });
+            [_imgs addObject: img];
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                _imgv.image = img;
+//            });
             
             //            NSLog(@"image: %zu, %zu", CGImageGetWidth(videoImage), CGImageGetHeight(videoImage));
         }
@@ -60,14 +66,39 @@
             while (currentPacket != nil) {
                 
                 CVPixelBufferRef decodedBuffer = [_decoder decode: currentPacket];
-                
+                NSLog(@"cont: %d", _imgs.count);
+                if (_imgs.count == 50) {
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        _dis = [CADisplayLink displayLinkWithTarget: self selector: @selector(play)];
+                        [_dis addToRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
+                    });
 
+                    break;
+                }
                 
                 currentPacket = [_fileReader nextPacket];
             }
     });
     
 
+}
+
+static int idx = 0;
+- (void)play {
+    
+    if (idx >= _imgs.count) {
+        [_dis invalidate];
+        _dis = nil;
+        return;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _imgv.image = _imgs[idx];
+        idx++;
+    });
+
+    
     
 }
 
