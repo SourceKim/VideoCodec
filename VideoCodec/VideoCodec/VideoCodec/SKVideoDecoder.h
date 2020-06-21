@@ -14,11 +14,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class SKVideoDecoder;
+
+@protocol SKVideoDecoderDelegate <NSObject>
+
+- (void)onBufferDecoded: (SKVideoDecoder *)decoder buffer: (CVPixelBufferRef)buffer;
+
+@end
+
 @interface SKVideoDecoder : NSObject
 
-- (CVPixelBufferRef)decode: (SKPacket *)packet;
+@property (nonatomic, weak) id<SKVideoDecoderDelegate> delegate;
 
-@property (nonatomic, strong) void(^decodeCallback)(CVPixelBufferRef);
+- (void)decode: (SKPacket *)packet;
 
 @end
 

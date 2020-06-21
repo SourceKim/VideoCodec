@@ -122,8 +122,8 @@
 		3BFE51DE249A1531005D71E8 /* Test */ = {
 			isa = PBXGroup;
 			children = (
-				3B7AA4A4249BE49900C67D42 /* Decode_H264_File */,
 				3BFE51EB249B685C005D71E8 /* Encode_MP4_H264 */,
+				3B7AA4A4249BE49900C67D42 /* Decode_H264_File */,
 			);
 			path = Test;
 			sourceTree = "<group>";

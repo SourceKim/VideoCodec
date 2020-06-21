@@ -35,12 +35,16 @@
     AVAssetTrack *videoTrack = [_asset tracksWithMediaType: AVMediaTypeVideo].firstObject;
     _assetReader = [self createAssetReader: _asset];
     _videoOutput = [self setupAssetReaderOutput: videoTrack];
+
     
     // 初始化 Encoder
     NSString *file = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"Encoded_MP4_H264_File"];
+    
+    // 注意，此处的宽高是 naturalSize，因为旋转了 90°，硬写成 480x960 会缺失数据。
+    // 使用 naturalSize **编码后的数据也是** 旋转过的。
     _encoder = [[SKVideoEncoder alloc] initWithOptions:(SKVideoEncoderOptions) {
-        .width = 480,
-        .height = 960,
+        .width = videoTrack.naturalSize.width,
+        .height = videoTrack.naturalSize.height,
         .outputPath = file,
     }];
     
@@ -71,7 +75,7 @@
     return [AVAsset assetWithURL: mp4Url];
 }
 
-#pragma mark - Setup asset reader
+#pragma mark - Asset Reader
 
 - (AVAssetReader *)createAssetReader: (AVAsset *)asset {
     NSError *err;
@@ -83,8 +87,11 @@
 }
 
 - (AVAssetReaderTrackOutput *)setupAssetReaderOutput: (AVAssetTrack *)track {
-    
-    NSDictionary *outputSettings = @{(id) kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)};
+    NSLog(@"size: %@", NSStringFromCGSize(track.naturalSize));
+    NSDictionary *outputSettings = @{(id) kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
+//                                     (id)kCVPixelBufferWidthKey : @(track.naturalSize.height),
+//                                     (id)kCVPixelBufferHeightKey : @(track.naturalSize.width),
+    };
     AVAssetReaderTrackOutput *output = [AVAssetReaderTrackOutput
                                              assetReaderTrackOutputWithTrack: track
                                              outputSettings: outputSettings];

@@ -52,7 +52,7 @@
     return self;
 }
 
-- (CVPixelBufferRef)decode: (SKPacket *)packet {
+- (void)decode: (SKPacket *)packet {
     
     uint8_t *buffer = packet.buffer;
     NSInteger bufferLen = packet.size;
@@ -65,16 +65,15 @@
     uint32_t *pNalSize = (uint32_t *)buffer;
     *pNalSize = CFSwapInt32HostToBig(nalSize);
     
-    CVPixelBufferRef decodedBuffer = NULL;
     switch (frameType) {
         case SK_H264_FRAME_TYPE_I:
             [self checkSession];
-            decodedBuffer = [self decodeFrame: packet];
+            [self decodeFrame: packet];
             break;
             
         case SK_H264_FRAME_TYPE_BP:
             [self checkSession];
-            decodedBuffer = [self decodeFrame: packet];
+            [self decodeFrame: packet];
             break;
             
         case SK_H264_FRAME_TYPE_SPS:
@@ -97,15 +96,6 @@
             
             break;
     }
-    
-    return decodedBuffer;
-    
-//    if (decodedBuffer) {
-//        CIImage *ciImage = [CIImage imageWithCVPixelBuffer: decodedBuffer];
-//        CIContext *temporaryContext = [CIContext contextWithOptions:nil];
-//        CGImageRef videoImage = [temporaryContext createCGImage:ciImage fromRect:CGRectMake(0, 0, CVPixelBufferGetWidth(decodedBuffer), CVPixelBufferGetHeight(decodedBuffer))];
-//        NSLog(@"image: %zu, %zu", CGImageGetWidth(videoImage), CGImageGetHeight(videoImage));
-//    }
 
 }
 
@@ -136,64 +126,79 @@
         
         _currentFormatDesc = formatDesc;
     }
-    
-    
 }
 
--(CVPixelBufferRef)decodeFrame: (SKPacket *)packet {
+-(void)decodeFrame: (SKPacket *)packet {
     
     if (!_session) {
         NSLog(@"No session");
-        return NULL;
+        return;
     }
     
-    CVPixelBufferRef outputPixelBuffer = NULL;
+    OSStatus status;
     
+    // 1. 构造 Block Buffer （SKPacket -> CMBlockBufferRef）
     CMBlockBufferRef blockBuffer = NULL;
-    OSStatus status  = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
-                                                          (void*)packet.buffer, packet.size,
-                                                          kCFAllocatorNull,
-                                                          NULL, 0, packet.size,
-                                                          0, &blockBuffer);
-    if(status == kCMBlockBufferNoErr) {
-        CMSampleBufferRef sampleBuffer = NULL;
-        const size_t sampleSizeArray[] = { packet.size };
-        status = CMSampleBufferCreateReady(kCFAllocatorDefault,
-                                           blockBuffer,
-                                           _currentFormatDesc,
-                                           1, 0, NULL, 1, sampleSizeArray,
-                                           &sampleBuffer);
-        if (status == kCMBlockBufferNoErr && sampleBuffer) {
-            VTDecodeFrameFlags flags = 0;
-            VTDecodeInfoFlags flagOut = 0;
-            // 默认是同步操作。
-            // 调用didDecompress，返回后再回调
-            OSStatus decodeStatus = VTDecompressionSessionDecodeFrame(_session,
-                                                                      sampleBuffer,
-                                                                      flags,
-                                                                      &outputPixelBuffer,
-                                                                      &flagOut);
-            
-            if(decodeStatus == kVTInvalidSessionErr) {
-                NSLog(@"IOS8VT: Invalid session, reset decoder session");
-            } else if(decodeStatus == kVTVideoDecoderBadDataErr) {
-                NSLog(@"IOS8VT: decode failed status=%d(Bad data)", decodeStatus);
-            } else if(decodeStatus != noErr) {
-                NSLog(@"IOS8VT: decode failed status=%d", decodeStatus);
-            }
-            
-            CFRelease(sampleBuffer);
-        }
+    CMBlockBufferFlags blockFlags = 0;
+    status = CMBlockBufferCreateWithMemoryBlock(NULL,
+                                                (void*)packet.buffer, // data
+                                                packet.size, // block length
+                                                kCFAllocatorNull, // **Important! can't be Null**
+                                                NULL,
+                                                0, // Offset
+                                                packet.size, // data length
+                                                blockFlags,
+                                                &blockBuffer);
+    
+    if (status != kCMBlockBufferNoErr || blockBuffer == NULL) {
+        NSLog(@"Create block buffer failed, status: %d", status);
         CFRelease(blockBuffer);
+        return;
     }
     
+    // 2. 构造 Sample Buffer （CMBlockBufferRef -> CMSampleBufferRef）
+    CMSampleBufferRef sampleBuffer = NULL;
+    const size_t sampleSizeArray[] = { packet.size };
+    status = CMSampleBufferCreateReady(NULL,
+                                       blockBuffer,
+                                       _currentFormatDesc,
+                                       1, // Sample num
+                                       0,
+                                       NULL,
+                                       1,
+                                       sampleSizeArray,
+                                       &sampleBuffer);
     
-    return outputPixelBuffer;
+    if (status != kCMBlockBufferNoErr || sampleBuffer == NULL) {
+        NSLog(@"Create sample buffer failed, status: %d", status);
+        CFRelease(blockBuffer);
+        CFRelease(sampleBuffer);
+        return;
+    }
+    
+    // 3. 解码成 Pixel Buffer （CMSampleBuffer -> CVPixelBufferRef，在回调中返回）
+    VTDecodeFrameFlags frameFlags = 0; // 默认是同步回调
+    VTDecodeInfoFlags outFlags = 0; // 输出的 flags
+    status = VTDecompressionSessionDecodeFrame(_session,
+                                               sampleBuffer,
+                                               frameFlags,
+                                               NULL,
+                                               &outFlags);
+    
+    if (status != noErr || sampleBuffer == NULL) {
+        NSLog(@"Decode sample buffer failed, status: %d", status);
+        CFRelease(blockBuffer);
+        CFRelease(sampleBuffer);
+        return;
+    }
+    
+    // 4. 内存释放
+    CFRelease(blockBuffer);
+    CFRelease(sampleBuffer);
 }
 
-
-void decodeCallback(
-                    void * CM_NULLABLE decompressionOutputRefCon,
+#pragma mark - 解码的回调
+void decodeCallback(void * CM_NULLABLE decompressionOutputRefCon,
                     void * CM_NULLABLE sourceFrameRefCon,
                     OSStatus status,
                     VTDecodeInfoFlags infoFlags,
@@ -203,17 +208,11 @@ void decodeCallback(
     
     NSLog(@"decode callback");
     
-    CVPixelBufferRef *outputPixelBuffer = (CVPixelBufferRef *)sourceFrameRefCon;
-    CVPixelBufferRetain(imageBuffer);
+    SKVideoDecoder *decoder = (__bridge SKVideoDecoder *)decompressionOutputRefCon;
     
-    ((__bridge SKVideoDecoder *)decompressionOutputRefCon).decodeCallback(imageBuffer);
-    
-//    if (imageBuffer) {
-//        CIImage *ciImage = [CIImage imageWithCVPixelBuffer: imageBuffer];
-//        CIContext *temporaryContext = [CIContext contextWithOptions:nil];
-//        CGImageRef videoImage = [temporaryContext createCGImage:ciImage fromRect:CGRectMake(0, 0, CVPixelBufferGetWidth(imageBuffer), CVPixelBufferGetHeight(imageBuffer))];
-//        NSLog(@"image: %zu, %zu", CGImageGetWidth(videoImage), CGImageGetHeight(videoImage));
-//    }
+    if (decoder.delegate && [decoder.delegate respondsToSelector: @selector(onBufferDecoded:buffer:)]) {
+        [decoder.delegate onBufferDecoded: decoder buffer: imageBuffer];
+    }
 }
 
 @end

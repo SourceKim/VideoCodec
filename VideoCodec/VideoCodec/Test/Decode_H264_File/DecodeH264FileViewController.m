@@ -12,7 +12,7 @@
 
 #import "SKVideoDecoder.h"
 
-@interface DecodeH264FileViewController ()
+@interface DecodeH264FileViewController ()<SKVideoDecoderDelegate>
 
 @end
 
@@ -27,79 +27,85 @@
     NSMutableArray<UIImage *> *_imgs;
     
     CADisplayLink *_dis;
+    
+    int _decodedFrameCount;
+    int _playFrameIndex;
+    
+    CIContext *_ctx;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    _imgs = [NSMutableArray array];
+    _decodedFrameCount = 0;
+    _ctx = [CIContext context];
     
     _imgv = [[UIImageView alloc] initWithFrame: self.view.bounds];
     [self.view addSubview: _imgv];
     _imgv.contentMode = UIViewContentModeScaleAspectFit;
     
     NSString *file = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"Encoded_MP4_H264_File"];
+    NSLog(@"Reading file stream: %@", file);
     
-    NSLog(@"reading file stream: %@", file);
-    
+    // 构造 H264 文件读取器
     _fileReader = [[SKVideoFileReader alloc] initWithH264File: file];
     
+    // 构造 H264 解码器
     _decoder = [SKVideoDecoder new];
+    _decoder.delegate = self;
     
-    _imgs = [NSMutableArray array];
-    _decoder.decodeCallback = ^(CVPixelBufferRef buffer) {
-        CVPixelBufferRef decodedBuffer = buffer;
-        if (decodedBuffer) {
-            CIImage *ciImage = [CIImage imageWithCVPixelBuffer: decodedBuffer];
-            CIContext *temporaryContext = [CIContext contextWithOptions:nil];
-            CGImageRef videoImage = [temporaryContext createCGImage:ciImage fromRect:CGRectMake(0, 0, CVPixelBufferGetWidth(decodedBuffer), CVPixelBufferGetHeight(decodedBuffer))];
-            UIImage *img = [UIImage imageWithCGImage: videoImage];
-            [_imgs addObject: img];
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                _imgv.image = img;
-//            });
-            
-            //            NSLog(@"image: %zu, %zu", CGImageGetWidth(videoImage), CGImageGetHeight(videoImage));
-        }
-    };
-    
+    // 子线程读取 & 解码
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        SKPacket *currentPacket = [_fileReader nextPacket];
-            while (currentPacket != nil) {
-                
-                CVPixelBufferRef decodedBuffer = [_decoder decode: currentPacket];
-                NSLog(@"cont: %d", _imgs.count);
-                if (_imgs.count == 50) {
-                    
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        _dis = [CADisplayLink displayLinkWithTarget: self selector: @selector(play)];
-                        [_dis addToRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
-                    });
-
-                    break;
-                }
-                
-                currentPacket = [_fileReader nextPacket];
-            }
+        
+        // 循环从 H264 文件中读取 packet（内部以 startCode 分割）
+        SKPacket *currentPacket = [self->_fileReader nextPacket];
+        while (currentPacket != nil) {
+            [self->_decoder decode: currentPacket]; // 1. 解码
+            currentPacket = [self->_fileReader nextPacket]; // 2. 读取下一个 packet
+        }
+        
+        NSLog(@"Decode finished");
+        
+        // 读取结束，返回主线程
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self->_playFrameIndex = 0;
+            self->_dis = [CADisplayLink displayLinkWithTarget: self selector: @selector(play)];
+            [self->_dis addToRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
+        });
     });
     
-
+    
 }
 
-static int idx = 0;
-- (void)play {
+#pragma mark - SKVideoDecoderDelegate 解码回调
+
+- (void)onBufferDecoded:(SKVideoDecoder *)decoder buffer:(CVPixelBufferRef)buffer {
     
-    if (idx >= _imgs.count) {
+    _decodedFrameCount++;
+    
+    NSLog(@"Did decode frame, current count: %d", _decodedFrameCount);
+    
+    if (buffer) {
+        CIImage *ciImage = [CIImage imageWithCVPixelBuffer: buffer];
+        CGRect rect = CGRectMake(0, 0, CVPixelBufferGetWidth(buffer), CVPixelBufferGetHeight(buffer));
+        CGImageRef cgImage = [_ctx createCGImage: ciImage fromRect: rect];
+        // 注意：从 AVAssetReader 中读取出来的 naturalSize 是宽高相反的，所以要加入 orientation
+        UIImage *img = [UIImage imageWithCGImage: cgImage scale: 0 orientation: UIImageOrientationRight];
+        [_imgs addObject: img];
+    }
+}
+
+#pragma mark - 播放
+
+- (void)play {
+    if (_playFrameIndex >= _imgs.count) {
         [_dis invalidate];
         _dis = nil;
         return;
     }
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        _imgv.image = _imgs[idx];
-        idx++;
-    });
-
-    
-    
+    _imgv.image = _imgs[_playFrameIndex];
+    _playFrameIndex++;
 }
 
 @end

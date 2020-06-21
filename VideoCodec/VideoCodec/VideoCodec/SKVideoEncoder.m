@@ -67,7 +67,16 @@
 - (VTCompressionSessionRef)createSession {
     
     VTCompressionSessionRef session;
-    OSStatus status = VTCompressionSessionCreate(NULL, _width, _height, kCMVideoCodecType_H264, NULL, NULL, NULL, encodeCallback, (__bridge void *)self, &session);
+    OSStatus status = VTCompressionSessionCreate(NULL,
+                                                 _width,
+                                                 _height,
+                                                 kCMVideoCodecType_H264,
+                                                 NULL,
+                                                 NULL,
+                                                 NULL,
+                                                 encodeCallback,
+                                                 (__bridge void *)self,
+                                                 &session);
     
     if (status != noErr) {
         NSLog(@"Session create failed, errcode: %d", status);
