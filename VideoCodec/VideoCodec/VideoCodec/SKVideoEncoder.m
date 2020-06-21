@@ -163,19 +163,23 @@
     
     CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CMTime presentationTimeStamp = CMTimeMake(_frameCnt, 1);
+    _frameCnt++;
     CMTime duration = CMSampleBufferGetOutputDuration(sampleBuffer);
     
-    _frameCnt++;
-    
-    OSStatus status = VTCompressionSessionEncodeFrame(_session, imageBuffer, presentationTimeStamp, duration, NULL, imageBuffer, NULL);
+    OSStatus status = VTCompressionSessionEncodeFrame(_session,
+                                                      imageBuffer,
+                                                      presentationTimeStamp,
+                                                      duration,
+                                                      NULL,
+                                                      imageBuffer,
+                                                      NULL);
     
     if (status != noErr) {
         NSLog(@"Encode sample buffer with id (%d) failed, errcode: %d", _frameCnt, status);
     }
 }
 
-void encodeCallback(
-                    void * CM_NULLABLE outputCallbackRefCon,
+void encodeCallback(void * CM_NULLABLE outputCallbackRefCon,
                     void * CM_NULLABLE sourceFrameRefCon,
                     OSStatus status,
                     VTEncodeInfoFlags infoFlags,

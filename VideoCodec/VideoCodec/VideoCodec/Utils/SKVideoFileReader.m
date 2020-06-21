@@ -74,6 +74,8 @@ const uint8_t KStartCode[4] = {0, 0, 0, 1};
                     memmove(_tmpBuffer, _tmpBuffer + packetSize, _currentOffset - packetSize);
                     _currentOffset -= packetSize;
                     
+//                    NSLog(@"km - %d, %d, %d, %d", vp.buffer[0], vp.buffer[1], vp.buffer[2], vp.buffer[3]); // 都是 0001
+                    
                     return vp;
                 }
             }
